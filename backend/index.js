@@ -71,3 +71,38 @@ if (existingBooking.length>0) {
   return res.json({ error: false, message: "Booking api called succesfully" })
   
 });
+
+
+// get vehicle types based on number of wheels
+app.get("/api/vehicle-types", async (req, res) => {
+  console.log("Inside the vechicle-type api");
+  try {
+    const { wheels } = req.query;
+
+    if (!wheels) {
+      return res.status(400).json({ error: true, message: "Wheels parameter is required" });
+    }
+
+    // Fetch from DB
+    const vehicleTypes = await db.vehicleType.findAll({
+      where: { wheels: wheels },  
+      attributes: ["name"]        
+    });
+    console.log("Data from the databse",vehicleTypes);
+
+    if (!vehicleTypes || vehicleTypes.length === 0) {
+      return res.status(404).json({ error: true, message: "No vehicle types found for given wheels" });
+    }else{
+      console.log("Sending the data");
+      return res.json({
+    error: false,
+    message: "Suceesfully fetched the data!",vehicleTypes
+  });
+
+    }  
+  } catch (error) {
+    console.error("Error fetching vehicle types:", error);
+    return res.status(500).json({ error: true, message: "Server error" });
+  }
+});
+
