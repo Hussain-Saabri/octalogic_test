@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    background-color: #fdfeff;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .icon-btn {
+    @apply text-xl text-slate-300 cursor-pointer;
+  }
+}
+/* Scrollbar full custom styling */
+::-webkit-scrollbar {
+  height: 6px;           /* horizontal ke liye */
+  width: 6px;            /* vertical ke liye */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to right, #00bcd4, #2196f3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to right, #00acc1, #1e88e5);
+}
+/* Tailwind ke saath react-burger-menu close button */
+
+
