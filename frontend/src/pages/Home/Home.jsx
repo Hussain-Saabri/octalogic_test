@@ -2,9 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import { useEffect } from "react";
 export default function Home() {
+  
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [vehicleModels, setVehicleModels] = useState([]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -13,13 +16,21 @@ export default function Home() {
     model: "",
     dates: { start: "", end: "" },
   });
+ 
   //validating the form
-  const validateForm = () => {
+  const validateForm = (step,formData) => {
     console.log("Inside the validateform function");
     const newErrors = {};
-   
-   if (!formData.firstName?.trim()) newErrors.firstName = "!Name is Required.";
+   if(step === 1)
+   {
+if (!formData.firstName?.trim()) newErrors.firstName = "!Name is Required.";
     if (!formData.lastName?.trim()) newErrors.lastName = "!lastName is required.";
+   }
+   
+   
+   if (step === 2) {
+    if (!formData.wheels) newErrors.wheels = "Please select 2 or 4 wheels.";
+  }
 
 
     return newErrors;
@@ -44,11 +55,31 @@ useEffect(() => {
 
   fetchVehicleTypes();
 }, [formData.wheels]);
+//getiing the model or vehiclee name
+useEffect(() => {
+  
+  const fetchModels = async () => {
+    console.log("getting the model name");
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/vehicle-models?name=${formData.vehicleType}`
+      );
+      console.log("Models fetched:",response);
+      setVehicleModels(response.data.vehicleModel);
+     
+    } catch (err) {
+      console.error("Error fetching vehicle models", err);
+      setVehicleModels([]);
+    }
+  };
+
+  fetchModels();
+}, [ formData.vehicleType]);
 
   // Handle Next / Submit
 const handleNext = async () => {
 
-const errorsFound = validateForm();
+const errorsFound = validateForm(step, formData);
       if (Object.values(errorsFound).length > 0) {
         console.log("Found erros");
       setErrors(errorsFound);
@@ -159,7 +190,9 @@ const errorsFound = validateForm();
                     />
                     {w}
                   </label>
+                  
                 ))}
+                 {errors.wheels && <p className="text-[16px] text-red-500 font-bold mt-1">{errors.wheels}</p>}
               </div>
             </div>
           )}
@@ -188,40 +221,47 @@ const errorsFound = validateForm();
                       }
                       className="mr-2"
                     />
+                   
                     {type.name}
                   </label>
                 ))}
               </div>
+              
             )}
           </div>
         )}
 
           {step === 4 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                Choose Model
-              </h2>
-              <div className="space-y-2">
-                {["Model A", "Model B"].map((m) => (
-                  <label
-                    key={m}
-                    className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="radio"
-                      value={m}
-                      checked={formData.model === m}
-                      onChange={(e) =>
-                        setFormData({ ...formData, model: e.target.value })
-                      }
-                      className="mr-2"
-                    />
-                    {m}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+  <div>
+    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+      Choose Model
+    </h2>
+
+    {vehicleModels.length === 0 ? (
+      <p className="text-gray-500">Loading models...</p>
+    ) : (
+      <div className="space-y-2">
+        {vehicleModels.map((model) => (
+          <label
+            key={model.id}
+            className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+          >
+            <input
+              type="radio"
+              value={model.model_name}
+              checked={formData.model === model.model_name}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mr-2"
+            />
+            {model.model_name}
+          </label>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
           {step === 5 && (
             <div>
