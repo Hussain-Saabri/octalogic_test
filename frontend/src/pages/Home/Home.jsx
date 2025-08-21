@@ -1,8 +1,10 @@
 import { useState } from "react";
-
+import axios from "axios";
+import { useEffect } from "react";
 export default function Home() {
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -11,22 +13,53 @@ export default function Home() {
     model: "",
     dates: { start: "", end: "" },
   });
-  //validate form
+  //validating the form
   const validateForm = () => {
     console.log("Inside the validateform function");
     const newErrors = {};
    
-   if (!firstName?.trim()) newErrors.firstName = "!Name is Required.";
-if (!lastName?.trim()) newErrors.slug = "!Slug is required.";
+   if (!formData.firstName?.trim()) newErrors.firstName = "!Name is Required.";
+    if (!formData.lastName?.trim()) newErrors.lastName = "!lastName is required.";
 
 
     return newErrors;
   };
+  //hooks being used to fetched the types of vechicles based on the wheels that use entered in the previous step
+useEffect(() => {
+  if (!formData.wheels) return;
+
+  const fetchVehicleTypes = async () => {
+    try {
+      console.log("calling the api")
+      const response = await axios.get(
+        `http://localhost:8000/api/vehicle-types?wheels=${formData.wheels}`
+      );
+      console.log("Respose from the api",response.data.vehicleTypes);
+      setVehicleTypes(response.data.vehicleTypes); 
+    } catch (err) {
+      console.error("Error fetching vehicle types", err);
+      setVehicleTypes([]);
+    }
+  };
+
+  fetchVehicleTypes();
+}, [formData.wheels]);
+
   // Handle Next / Submit
-  const handleNext = async () => {
+const handleNext = async () => {
+
+const errorsFound = validateForm();
+      if (Object.values(errorsFound).length > 0) {
+        console.log("Found erros");
+      setErrors(errorsFound);
+      return;
+    } else {
+      setErrors({});
+    }
+
     if (step < 5) {
       setStep(step + 1);
-      const errorsFound = validateForm();
+      
       
     } else {
       try {
@@ -90,6 +123,7 @@ if (!lastName?.trim()) newErrors.slug = "!Slug is required.";
                   setFormData({ ...formData, firstName: e.target.value })
                 }
               />
+              {errors.firstName && <p className="text-[16px] text-red-500 font-bold mt-1">{errors.firstName}</p>}
               <input
                 type="text"
                 placeholder="Last Name"
@@ -99,6 +133,7 @@ if (!lastName?.trim()) newErrors.slug = "!Slug is required.";
                   setFormData({ ...formData, lastName: e.target.value })
                 }
               />
+              {errors.lastName && <p className="text-[16px] text-red-500 font-bold mt-1">{errors.lastName}</p>}
             </div>
           )}
 
@@ -130,34 +165,36 @@ if (!lastName?.trim()) newErrors.slug = "!Slug is required.";
           )}
 
           {step === 3 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                Type of Vehicle
-              </h2>
+          <div>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              Type of Vehicle
+            </h2>
+
+            {vehicleTypes.length === 0 ? (
+              <p className="text-gray-500">Loading vehicle types...</p>
+            ) : (
               <div className="space-y-2">
-                {(formData.wheels === "2"
-                  ? ["Cruiser", "Sports"]
-                  : ["Hatchback", "SUV", "Sedan"]
-                ).map((type) => (
+                {vehicleTypes.map((type) => (
                   <label
                     key={type}
                     className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
                   >
                     <input
                       type="radio"
-                      value={type}
-                      checked={formData.vehicleType === type}
+                      value={type.name}
+                      checked={formData.vehicleType === type.name}
                       onChange={(e) =>
                         setFormData({ ...formData, vehicleType: e.target.value })
                       }
                       className="mr-2"
                     />
-                    {type}
+                    {type.name}
                   </label>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
           {step === 4 && (
             <div>
