@@ -7,6 +7,7 @@ app.use(express.json());
 app.use(cors({ origin: "*" }));// it allows all addresses
 const port = 8000;
 const { Op } = require("sequelize");
+const vehicleModel = require('./model/vehicle.model');
 
 app.listen(port, () => {
   console.log(`Server started on server ${port}`);
@@ -97,6 +98,46 @@ app.get("/api/vehicle-types", async (req, res) => {
       return res.json({
     error: false,
     message: "Suceesfully fetched the data!",vehicleTypes
+  });
+
+    }  
+  } catch (error) {
+    console.error("Error fetching vehicle types:", error);
+    return res.status(500).json({ error: true, message: "Server error" });
+  }
+});
+//getting the model name
+app.get("/api/vehicle-models", async (req, res) => {
+  console.log("Inside the vehicle-model api");
+  try {
+    const { name } = req.query;
+
+    console.log("logging thr query",req.query);
+
+    // Fetch from DB
+    const vehicleType = await db.vehicleType.findAll({
+      where: { name: name },  
+      attributes: ["id"]        
+    });
+    console.log("Data from the databse for vehicleModel",vehicleType);
+   let vehicleModel = [];
+    if(vehicleType.length>0)
+    {
+      console.log("Getting data from the database for vehicle model")
+      const typeIds = vehicleType.map(v => v.dataValues.id);
+     vehicleModel = await db.vehicle.findAll({
+        where: { type_id: { [Op.in]: typeIds } },
+      });
+
+    }
+    console.log("vehicle model",vehicleModel)
+    if (!vehicleModel|| vehicleModel.length === 0) {
+      return res.status(404).json({ error: true, message: "No vehicle model found " });
+    }else{
+      console.log("Sending the data");
+      return res.json({
+    error: false,
+    message: "Suceesfully fetched the data!",vehicleModel: vehicleModel
   });
 
     }  
